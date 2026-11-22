@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>awfi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky top bar, scrolling content column, bottom tab bar on phones, side rail on wide screens. Look: instrument panel, ink + signal amber. */
+:root{--bg:#eef1f5;--panel:#fff;--ink:#14202e;--mute:#5b6b7e;--line:#d9e0e8;--accent:#e8590c;--accent-ink:#fff;--good:#1b8a5a;--warn:#b7791f;--bad:#c92a2a;--soft:#f5f7fa;
+--f-body:'Cairo',system-ui,sans-serif;--f-data:'IBM Plex Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151d;--panel:#16202b;--ink:#e8eef5;--mute:#92a3b6;--line:#26343f;--accent:#ff8a3d;--accent-ink:#1a0d03;--good:#4cc38a;--warn:#e5b04a;--bad:#ff7b7b;--soft:#1b2733;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e151d;--panel:#16202b;--ink:#e8eef5;--mute:#92a3b6;--line:#26343f;--accent:#ff8a3d;--accent-ink:#1a0d03;--good:#4cc38a;--warn:#e5b04a;--bad:#ff7b7b;--soft:#1b2733;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 84px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:880px;margin:0 auto}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 10px}
+h1{font-size:20px;font-weight:800;margin:0}
+.badge{font-size:12px;border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:2px 10px;color:var(--mute)}
+nav{position:fixed;inset:auto 0 0;z-index:6;background:var(--panel);border-top:1px solid var(--line);display:flex;gap:2px;padding:6px max(8px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px));overflow-x:auto}
+nav a{flex:1 0 auto;min-width:64px;text-align:center;text-decoration:none;color:var(--mute);font-size:12.5px;padding:6px 8px;border-radius:8px;font-weight:600}
+nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent)}
+nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section[hidden]{display:none}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card h2{font-size:15px;margin:0 0 10px;font-weight:700}
+.lbl{font-size:12px;color:var(--mute);letter-spacing:.02em}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.big{font-size:34px;font-weight:500;line-height:1.1}
+.row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.pill{font-size:12px;border-radius:99px;padding:1px 10px;font-weight:600;border:1px solid currentColor}
+.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+button,.btn{font:inherit;font-weight:700;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:9px 18px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:default}
+input,select{font:inherit;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0;max-width:100%}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1 1 180px;direction:ltr;text-align:left}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--mute);font-weight:600}
+pre{font-family:var(--f-data);font-size:13px;direction:ltr;text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0;overflow-x:auto;min-height:120px;white-space:pre-wrap}
+.meter{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;min-width:70px}
+.meter i{display:block;height:100%;background:var(--accent)}
+.note{font-size:12.5px;color:var(--mute);margin:14px 0 0}
+svg text{fill:var(--mute);font-family:var(--f-data);font-size:11px}
+.sec-title{font-size:22px;font-weight:800;margin:6px 0 12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(min-width:900px){body{padding-block:0 24px}nav{inset:0 0 0 auto;flex-direction:column;width:150px;border-top:0;border-left:1px solid var(--line);padding:70px 8px}nav a{flex:0 0 auto;text-align:right}body{padding-right:190px}}
+</style>
+</head><body>
+<div class="wrap">
+<header><h1>awfi</h1><span class="badge" id="badge">أدوات الشبكة</span></header>
+
+<section id="home">
+<div class="grid">
+<div class="card"><div class="lbl">الشبكة المتصلة</div><div class="big" id="ssid" style="direction:ltr;text-align:right;overflow-wrap:anywhere">—</div><div class="lbl" id="hSub"></div><div id="hMsg" style="margin-top:6px"></div></div>
+<div class="card"><div class="lbl">قوة الإشارة</div><div class="big"><span class="num" id="rssi">—</span> <small class="lbl">dBm</small></div><div class="meter" style="margin-top:8px"><i id="rssiBar" style="width:0"></i></div></div>
+<div class="card"><div class="lbl">سرعة الربط</div><div class="big"><span class="num" id="link">—</span> <small class="lbl">Mbps</small></div><div class="lbl">زمن الاستجابة للراوتر <span class="num" id="gw">—</span> ms</div></div>
+</div>
+<div class="card" style="margin-top:12px"><h2>معلومات الاتصال</h2>
+<div class="row"><span>عنوان الجهاز</span><span class="num" id="hIp">—</span></div>
+<div class="row"><span>البوابة (الراوتر)</span><span class="num" id="hGw">—</span></div>
+<div class="row"><span>خادم DNS</span><span class="num" id="hDns">—</span></div>
+<div class="row"><span>قناع الشبكة</span><span class="num" id="hMask">—</span></div>
+<div class="row"><span>جودة الإشارة</span><span class="pill" id="hRate">—</span></div></div>
+</section>
+
+<section id="analyzer" hidden>
+<div class="sec-title">محلل الواي فاي</div>
+<div class="bar"><select id="band" aria-label="النطاق"><option value="24">2.4 GHz</option><option value="5">5 GHz</option></select><button id="rescan">افحص الآن</button><span class="lbl" id="scanMsg"></span></div>
+<div class="card"><svg id="chart" viewBox="0 0 640 260" width="100%" role="img" aria-label="رسم قوة الشبكات حسب القناة"></svg></div>
+<div class="card tw" style="margin-top:12px"><table><thead><tr><th>الشبكة</th><th>القناة</th><th>الإشارة</th><th>الأمان</th></tr></thead><tbody id="nets"></tbody></table></div>
+<div class="card" style="margin-top:12px"><h2>أفضل قناة</h2><div id="best">—</div></div>
+</section>
+
+<section id="speed" hidden>
+<div class="sec-title">اختبار السرعة</div>
+<div class="card" style="text-align:center">
+<svg id="gauge" viewBox="0 0 220 130" width="260" role="img" aria-label="عداد السرعة"></svg>
+<div><span class="big num" id="spVal">0</span> <span class="lbl">Mbps</span></div>
+<div class="lbl" id="spPhase">جاهز</div>
+<div style="margin-top:12px"><button id="spGo">ابدأ الاختبار</button></div>
+<p class="note">يستخدم الاختبار خوادم Cloudflare العامة ويستهلك نحو 60 ميجابايت.</p></div>
+<div class="grid" style="margin-top:12px">
+<div class="card"><div class="lbl">التنزيل</div><div class="big num" id="spD">—</div></div>
+<div class="card"><div class="lbl">الرفع</div><div class="big num" id="spU">—</div></div>
+<div class="card"><div class="lbl">Ping / Jitter</div><div class="big num" id="spP">—</div></div></div>
+</section>
+
+<section id="devices" hidden>
+<div class="sec-title">أجهزة الشبكة</div>
+<div class="bar"><button id="scanGo">افحص الشبكة</button><span class="lbl" id="scanSt"></span></div>
+<div class="card tw"><table><thead><tr><th>الجهاز</th><th>العنوان</th><th>MAC</th><th>الشركة</th></tr></thead><tbody id="devs"></tbody></table></div>
+<p class="note" id="devNote"></p>
+</section>
+
+<section id="ports" hidden>
+<div class="sec-title">فحص المنافذ</div>
+<div class="bar"><input id="pHost" value="" aria-label="العنوان" placeholder="192.168.1.1"><select id="pSet"><option value="common">المنافذ الشائعة</option><option value="web">الويب فقط</option></select><button id="pGo">افحص</button></div>
+<div class="card tw"><table><thead><tr><th>المنفذ</th><th>الخدمة</th><th>الحالة</th><th>ملاحظة</th></tr></thead><tbody id="pOut"></tbody></table></div>
+<p class="note">افحص أجهزتك وشبكتك فقط.</p>
+</section>
+
+<section id="tools" hidden>
+<div class="sec-title">أدوات الشبكة</div>
+<div class="grid">
+<div class="card"><h2>Ping</h2><div class="bar"><input id="pingH" value="8.8.8.8" aria-label="مضيف Ping"><button id="pingGo">ابدأ</button></div><pre id="pingO">النتيجة تظهر هنا</pre></div>
+<div class="card"><h2>Traceroute</h2><div class="bar"><input id="trH" value="example.com" aria-label="مضيف Traceroute"><button id="trGo">ابدأ</button></div><pre id="trO">النتيجة تظهر هنا</pre></div>
+<div class="card"><h2>DNS Lookup</h2><div class="bar"><input id="dnsH" value="example.com" aria-label="النطاق"><button id="dnsGo">ابحث</button></div><pre id="dnsO">النتيجة تظهر هنا</pre></div>
+<div class="card"><h2>Wake-on-LAN</h2><div class="bar"><input id="wolM" value="" placeholder="AA:BB:CC:11:22:33" aria-label="عنوان MAC"><button id="wolGo">أرسل</button></div><pre id="wolO">أدخل عنوان MAC للجهاز</pre></div>
+</div>
+</section>
+
+<section id="heat" hidden>
+<div class="sec-title">خريطة قوة الإشارة</div>
+<div class="bar"><span class="lbl">قف في مكان القياس، ثم اضغط موضعك على المخطط ليسجل قراءة الإشارة الحالية.</span><button class="ghost" id="hClr">مسح</button></div>
+<div class="card"><canvas id="hc" width="640" height="400" style="width:100%;border-radius:8px;background:var(--soft);touch-action:manipulation" aria-label="مخطط القياس"></canvas>
+<div class="bar" style="margin:10px 0 0"><span class="lbl">ضعيف</span><div style="flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,#c92a2a,#f08c00,#2f9e44)"></div><span class="lbl">قوي</span></div>
+<p class="note" id="hN"></p></div>
+</section>
+
+<section id="usage" hidden>
+<div class="sec-title">استهلاك البيانات (واي فاي)</div>
+<div class="bar"><select id="uP" aria-label="الفترة"><option value="1">آخر 24 ساعة</option><option value="7">آخر 7 أيام</option><option value="30">آخر 30 يوما</option></select></div>
+<div class="card" id="uL"></div>
+</section>
+
+<section id="guard" hidden>
+<div class="sec-title">حماية الشبكة</div>
+<div class="grid">
+<div class="card"><h2>فحص الأمان</h2><div id="gL" class="lbl">اضغط إعادة الفحص</div><div style="margin-top:10px"><button id="gGo">إعادة الفحص</button></div></div>
+<div class="card"><h2>الأجهزة</h2><div id="gD" class="lbl">افحص الأجهزة من تبويب الأجهزة أولا</div><p class="note">علّم الأجهزة التي تعرفها. أي جهاز غير معلَّم يظهر كغير معروف.</p></div>
+<div class="card"><h2>صفحة الراوتر</h2><p>افتح إعدادات الراوتر لتغيير القناة وكلمة المرور وإيقاف WPS.</p><p><button class="ghost" id="rtGo">فتح صفحة الراوتر</button></p></div>
+</div></section>
+
+<section id="diag" hidden>
+<div class="sec-title">التشخيص</div>
+<div class="card"><p>يقيس الإشارة والاستجابة وفقد الحزم وازدحام القناة، ثم يشرح السبب المحتمل لبطء الإنترنت. يعمل على الجهاز دون خدمة خارجية.</p><button id="dGo">شخّص شبكتي</button><div id="dO" style="margin-top:12px"></div></div>
+</section>
+</div>
+<nav id="tabs"></nav>
+
+<script>
+document.documentElement.lang = "ar";
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const B = window.AwfiBridge;
+let seq = 0; const cbs = {};
+window.__awfi = (id, s) => { const c = cbs[id]; if (c) c(JSON.parse(s)); };
+const call = (m, a, on) => new Promise(res => {
+  const id = ++seq;
+  cbs[id] = e => { if (e.done) { delete cbs[id]; res(e.result || {}); } else if (on) on(e); };
+  try { B.call(m, JSON.stringify(a || {}), id); } catch (x) { res({ error: String(x) }); }
+});
+const ls = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const bandOf = f => f < 3000 ? '2.4 GHz' : f < 5900 ? '5 GHz' : '6 GHz';
+const mb = b => b >= 1e9 ? (b / 1e9).toFixed(2) + ' GB' : (b / 1e6).toFixed(1) + ' MB';
+
+function main() {
+  const T = [['home', 'الرئيسية'], ['analyzer', 'المحلل'], ['speed', 'السرعة'], ['devices', 'الأجهزة'], ['ports', 'المنافذ'], ['tools', 'أدوات'], ['heat', 'الخريطة'], ['usage', 'الاستهلاك'], ['guard', 'الحماية'], ['diag', 'التشخيص']];
+  $('tabs').innerHTML = T.map(t => `<a href="#${t[0]}" data-t="${t[0]}">${t[1]}</a>`).join('');
+  let cur = 'home';
+  function route() {
+    let h = location.hash.slice(1); if (!T.some(t => t[0] === h)) h = 'home'; cur = h;
+    T.forEach(t => { $(t[0]).hidden = t[0] !== h; });
+    document.querySelectorAll('nav a').forEach(a => { if (a.dataset.t === h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (h === 'home') home();
+    if (h === 'analyzer' && !NETS.length) doScan();
+    if (h === 'usage') usage();
+    if (h === 'ports' && !$('pHost').value && W.gw) $('pHost').value = W.gw;
+    if (h === 'heat') hdraw();
+  }
+  addEventListener('hashchange', route);
+  window.onAppResume = () => { if (cur === 'home') home(); if (cur === 'usage') usage(); };
+
+  /* ---- home ---- */
+  let W = {};
+  async function home() {
+    const w = await call('wifiInfo'); W = w;
+    if (w.error) { $('hMsg').textContent = w.error; return; }
+    if (!w.enabled) { $('ssid').textContent = '—'; $('hMsg').textContent = 'الواي فاي متوقف. شغّله للاتصال.'; return; }
+    const unk = !w.ssid || w.ssid === '<unknown ssid>';
+    $('ssid').textContent = unk ? 'غير معروف' : w.ssid;
+    $('hMsg').innerHTML = unk ? '<button id="perm" class="ghost">منح إذن الموقع لإظهار اسم الشبكة</button>' : '';
+    if (unk) $('perm').onclick = () => call('requestPerms');
+    $('hSub').textContent = w.freq ? `${bandOf(w.freq)} · القناة ${w.channel}` : '';
+    $('rssi').textContent = w.rssi; $('rssiBar').style.width = Math.min(100, Math.max(0, (w.rssi + 95) * 2)) + '%';
+    $('link').textContent = w.link > 0 ? w.link : '—';
+    $('hIp').textContent = w.ip; $('hGw').textContent = w.gw; $('hDns').textContent = w.dns; $('hMask').textContent = w.mask;
+    const r = w.rssi > -60 ? ['good', 'ممتازة'] : w.rssi > -70 ? ['good', 'جيدة'] : w.rssi > -80 ? ['warn', 'متوسطة'] : ['bad', 'ضعيفة'];
+    $('hRate').className = 'pill ' + r[0]; $('hRate').textContent = r[1];
+    const p = await call('ping', { host: w.gw, count: 1, quiet: true });
+    $('gw').textContent = p.avg >= 0 ? Math.round(p.avg) : '—';
+  }
+  setInterval(() => { if (!document.hidden && cur === 'home') home(); }, 4000);
+
+  /* ---- analyzer ---- */
+  let NETS = [];
+  const colors = ['#e8590c', '#1c7ed6', '#2f9e44', '#ae3ec9', '#f08c00', '#0ca678', '#d6336c', '#4263eb', '#868e96'];
+  const CH5 = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165];
+  async function doScan() {
+    $('scanMsg').textContent = 'جاري الفحص...'; $('rescan').disabled = true;
+    const r = await call('scan');
+    $('rescan').disabled = false;
+    if (r.error) { $('scanMsg').textContent = r.error; return; }
+    NETS = r.list || [];
+    $('scanMsg').textContent = NETS.length ? `${NETS.length} شبكة` : 'لا نتائج. فعّل إذن الموقع وخدمة الموقع (GPS) في الهاتف.';
+    draw();
+  }
+  function draw() {
+    const b = $('band').value === '24' ? 24 : 5;
+    const list = NETS.filter(n => b === 24 ? n.freq < 3000 : n.freq >= 3000);
+    const W_ = 640, H = 260, L = 36, Bt = 28, T0 = 10, span = W_ - L - 40;
+    const xs = b === 24 ? c => L + 20 + (c - 1) * span / 12 : c => L + 20 + CH5.indexOf(c) * span / (CH5.length - 1);
+    const hw = b === 24 ? 2 * span / 12 : span / (CH5.length - 1) * 0.9;
+    const y = d => T0 + (-30 - d) * (H - Bt - T0) / 65;
+    let s = '';
+    for (let d = -30; d >= -95; d -= 13) s += `<line x1="${L}" x2="${W_}" y1="${y(d)}" y2="${y(d)}" stroke="var(--line)"/><text x="${L - 4}" y="${y(d) + 4}" text-anchor="end">${d}</text>`;
+    const chs = b === 24 ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] : CH5;
+    chs.forEach((c, i) => { if (b === 24 || i % 2 === 0) s += `<text x="${xs(c)}" y="${H - 8}" text-anchor="middle">${c}</text>`; });
+    list.forEach((n, i) => {
+      if (b === 5 && CH5.indexOf(n.channel) < 0) return;
+      if (b === 24 && (n.channel < 1 || n.channel > 13)) return;
+      const cx = xs(n.channel), top = y(Math.max(-95, Math.min(-30, n.level))), base = y(-95), k = colors[i % colors.length];
+      s += `<path d="M${cx - hw},${base} Q${cx},${top - (base - top)} ${cx + hw},${base}" fill="${k}" fill-opacity=".14" stroke="${k}" stroke-width="2"/><text x="${cx}" y="${top - 4}" text-anchor="middle" style="fill:${k}">${esc((n.ssid || '').slice(0, 12))}</text>`;
+    });
+    $('chart').innerHTML = s;
+    const all = NETS.slice().sort((a, c) => c.level - a.level);
+    $('nets').innerHTML = all.map(n => `<tr><td>${n.ssid ? esc(n.ssid) : '<span class="lbl">(مخفية)</span>'}</td><td><span class="num">${n.channel}</span></td><td><span class="num">${n.level} dBm</span></td><td>${n.sec === 'WEP' || n.sec === 'OPEN' ? `<span class="pill bad">${n.sec === 'OPEN' ? 'مفتوحة' : 'WEP'}</span>` : esc(n.sec)}</td></tr>`).join('');
+    if (!list.length) { $('best').textContent = '—'; return; }
+    const cand = b === 24 ? [1, 6, 11] : CH5;
+    const load = c => list.reduce((s2, n) => s2 + (Math.abs(n.channel - c) <= (b === 24 ? 4 : 0) ? Math.max(0, n.level + 100) : 0), 0);
+    const best = cand.slice().sort((a, c) => load(a) - load(c))[0];
+    const cnt = list.filter(n => Math.abs(n.channel - best) <= (b === 24 ? 4 : 0)).length;
+    $('best').innerHTML = `القناة الأقل ازدحاما في ${b === 24 ? '2.4' : '5'} GHz هي <b class="num">${best}</b> ويتداخل معها <b class="num">${cnt}</b> شبكة. غيّر قناة الراوتر من صفحة إعداداته.`;
+  }
+  $('band').onchange = draw; $('rescan').onclick = doScan;
+
+  /* ---- speed ---- */
+  (function () {
+    let s = '<path d="M20,110 A90,90 0 0 1 200,110" fill="none" stroke="var(--line)" stroke-width="12" stroke-linecap="round"/><path id="arc" d="M20,110 A90,90 0 0 1 200,110" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>';
+    [0, 100, 250, 500, 1000].forEach((v, i) => { const a = Math.PI * (1 - i / 4), x = 110 + 104 * Math.cos(a), y = 110 - 104 * Math.sin(a); s += `<text x="${x}" y="${y + 4}" text-anchor="middle">${v}</text>`; });
+    $('gauge').innerHTML = s;
+  })();
+  const setG = v => { $('spVal').textContent = v.toFixed(1); $('arc').setAttribute('stroke-dasharray', Math.min(1, Math.log10(1 + v) / 3) * 100 + ' 100'); };
+  $('spGo').onclick = async () => {
+    const b = $('spGo'); b.disabled = true; ['spD', 'spU', 'spP'].forEach(i => $(i).textContent = '—'); setG(0);
+    const names = { ping: 'قياس الاستجابة', down: 'تنزيل', up: 'رفع' }; let ph = 'ping';
+    const r = await call('speed', {}, e => {
+      if (e.k === 'phase') { ph = e.v; $('spPhase').textContent = names[e.v]; if (e.v !== 'ping') setG(0); }
+      if (e.k === 'mbps') setG(e.v);
+    });
+    if (r.error) { $('spPhase').textContent = 'تعذر الاختبار: ' + r.error; b.disabled = false; return; }
+    $('spD').textContent = r.down.toFixed(1) + ' Mbps'; $('spU').textContent = r.up.toFixed(1) + ' Mbps';
+    $('spP').textContent = Math.round(r.ping) + ' / ' + Math.round(r.jitter) + ' ms'; setG(r.down);
+    $('spPhase').textContent = 'اكتمل'; b.disabled = false;
+  };
+
+  /* ---- devices ---- */
+  let DEVS = []; const known = new Set(ls.get('known', []));
+  const dkey = d => d.mac || d.ip;
+  $('scanGo').onclick = async () => {
+    $('devs').innerHTML = ''; DEVS = []; $('devNote').textContent = ''; $('scanGo').disabled = true; $('scanSt').textContent = 'جاري الفحص...';
+    const r = await call('devices', {}, e => {
+      if (e.k === 'dev') {
+        DEVS.push(e.v); const d = e.v;
+        const tag = d.ip === W.ip ? ' (هذا الهاتف)' : d.ip === W.gw ? ' (الراوتر)' : '';
+        $('devs').insertAdjacentHTML('beforeend', `<tr><td>${esc(d.host || 'جهاز')}${tag}</td><td><span class="num">${esc(d.ip)}</span></td><td><span class="num">${esc(d.mac || '—')}</span></td><td>${esc(d.vendor || '—')}</td></tr>`);
+      }
+      if (e.k === 'progress') $('scanSt').textContent = `جاري الفحص ${Math.round(e.v / 254 * 100)}%`;
+    });
+    $('scanGo').disabled = false;
+    if (r.error) { $('scanSt').textContent = r.error; return; }
+    $('scanSt').textContent = `تم العثور على ${r.count} جهاز`;
+    if (!r.arp) $('devNote').textContent = 'أندرويد يمنع قراءة عناوين MAC في هذا الإصدار، لذلك تظهر عناوين IP فقط.';
+  };
+
+  /* ---- ports ---- */
+  const SVC = { 21: 'FTP', 22: 'SSH', 23: 'Telnet', 53: 'DNS', 80: 'HTTP', 443: 'HTTPS', 445: 'SMB', 3389: 'RDP', 8080: 'HTTP-alt', 8443: 'HTTPS-alt' };
+  const PSET = { common: [21, 22, 23, 53, 80, 443, 445, 3389, 8080], web: [80, 443, 8080, 8443] };
+  $('pGo').onclick = async () => {
+    const host = $('pHost').value.trim() || W.gw; if (!host) return;
+    const o = $('pOut'); o.innerHTML = ''; $('pGo').disabled = true;
+    const rows = [];
+    const r = await call('ports', { host, ports: PSET[$('pSet').value] }, e => { if (e.k === 'port') rows.push(e.v); });
+    $('pGo').disabled = false;
+    if (r.error) { o.innerHTML = `<tr><td colspan="4">${esc(r.error)}</td></tr>`; return; }
+    rows.sort((a, c) => a.port - c.port);
+    o.innerHTML = rows.map(p => { const risky = [21, 23, 445, 3389].includes(p.port); return `<tr><td><span class="num">${p.port}</span></td><td>${SVC[p.port] || ''}</td><td><span class="pill ${p.open ? 'good' : 'warn'}">${p.open ? 'مفتوح' : 'مغلق'}</span></td><td>${p.open && risky ? '<span class="bad">منفذ خطر</span>' : p.open && p.port === 80 ? 'يفضل HTTPS' : ''}</td></tr>`; }).join('');
+  };
+
+  /* ---- tools ---- */
+  const out = (id, t) => { $(id).textContent = t; };
+  $('pingGo').onclick = async () => {
+    const h = $('pingH').value.trim() || '8.8.8.8'; let t = ''; $('pingGo').disabled = true; out('pingO', 'جاري التنفيذ...');
+    const r = await call('ping', { host: h, count: 4 }, e => { if (e.k === 'line') { t += e.v + '\n'; out('pingO', t); } });
+    if (r.error) t += r.error; else t += `\nمتوسط ${r.avg >= 0 ? Math.round(r.avg) + ' ms' : '—'} · فقد الحزم ${r.loss}%`;
+    out('pingO', t); $('pingGo').disabled = false;
+  };
+  $('trGo').onclick = async () => {
+    const h = $('trH').value.trim() || 'example.com'; let t = `traceroute إلى ${h}\n`; $('trGo').disabled = true; out('trO', t);
+    const r = await call('trace', { host: h }, e => { if (e.k === 'hop') { t += `${e.v.ttl}  ${e.v.ip}  ${e.v.ms >= 0 ? e.v.ms + ' ms' : ''}\n`; out('trO', t); } });
+    if (r.error) t += r.error; else if (!r.reached) t += '\nلم يصل إلى الوجهة (قد تحجب بعض الشبكات ICMP).';
+    out('trO', t); $('trGo').disabled = false;
+  };
+  $('dnsGo').onclick = async () => {
+    const h = $('dnsH').value.trim() || 'example.com'; out('dnsO', '...');
+    const r = await call('dns', { host: h });
+    out('dnsO', r.error ? 'تعذر الحل: ' + r.error : h + '\n' + r.records.map(x => `${x.type.padEnd(5)} ${x.addr}`).join('\n') + `\nزمن الاستجابة ${Math.round(r.ms)} ms`);
+  };
+  $('wolGo').onclick = async () => {
+    const m = $('wolM').value.trim(); out('wolO', 'جاري الإرسال...');
+    const r = await call('wol', { mac: m });
+    out('wolO', r.error ? r.error : `تم إرسال الحزمة السحرية إلى ${m.toUpperCase()} عبر البث ${r.target}\nيجب أن يكون Wake-on-LAN مفعلا في الجهاز المستهدف.`);
+  };
+
+  /* ---- heatmap (real RSSI readings) ---- */
+  let hp = ls.get('heat', []); const hc = $('hc'), hx = hc.getContext('2d');
+  const col = v => { const t = Math.max(0, Math.min(1, (v + 88) / 45)); const r = t < .5 ? 201 + 39 * t * 2 : 240 - 193 * (t - .5) * 2, g = t < .5 ? 42 + 98 * t * 2 : 140 + 18 * (t - .5) * 2, b = t < .5 ? 42 * (1 - t * 2) : 68 * (t - .5) * 2; return [r | 0, g | 0, b | 0]; };
+  function hdraw() {
+    const cs = getComputedStyle(document.documentElement), ln = cs.getPropertyValue('--line').trim(), mu = cs.getPropertyValue('--mute').trim(), ink = cs.getPropertyValue('--ink').trim();
+    hx.clearRect(0, 0, 640, 400); hx.strokeStyle = ln; hx.lineWidth = 1; hx.beginPath();
+    for (let x = 0; x <= 640; x += 80) { hx.moveTo(x, 0); hx.lineTo(x, 400); } for (let y = 0; y <= 400; y += 80) { hx.moveTo(0, y); hx.lineTo(640, y); } hx.stroke();
+    hp.forEach(p => { const c = col(p.v), g = hx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 90); g.addColorStop(0, `rgba(${c},.55)`); g.addColorStop(1, `rgba(${c},0)`); hx.fillStyle = g; hx.fillRect(p.x - 90, p.y - 90, 180, 180); });
+    hx.font = '13px monospace'; hp.forEach(p => { hx.fillStyle = ink; hx.beginPath(); hx.arc(p.x, p.y, 4, 0, 7); hx.fill(); hx.fillStyle = mu; hx.fillText(p.v, p.x + 7, p.y - 6); });
+    $('hN').textContent = hp.length ? `${hp.length} نقطة · أضعف قراءة ${Math.min(...hp.map(p => p.v))} dBm` : 'لا توجد نقاط بعد.';
+  }
+  hc.addEventListener('click', async e => {
+    const r = hc.getBoundingClientRect(), x = (e.clientX - r.left) * 640 / r.width, y = (e.clientY - r.top) * 400 / r.height;
+    const w = await call('wifiInfo'); if (w.error || !w.enabled) { $('hN').textContent = 'الواي فاي غير متصل'; return; }
+    hp.push({ x, y, v: w.rssi }); ls.set('heat', hp); hdraw();
+  });
+  $('hClr').onclick = () => { hp = []; ls.set('heat', hp); hdraw(); };
+
+  /* ---- usage ---- */
+  async function usage() {
+    const box = $('uL'); box.textContent = 'جاري القراءة...';
+    const r = await call('usage', { days: +$('uP').value });
+    if (r.error) { box.textContent = r.error; return; }
+    if (!r.perm) { box.innerHTML = '<p>لعرض استهلاك التطبيقات يلزم إذن "الوصول إلى بيانات الاستخدام". فعّله لتطبيق awfi ثم ارجع.</p><button id="uPerm">فتح الإعدادات</button>'; $('uPerm').onclick = () => call('openUsageSettings'); return; }
+    if (!r.apps.length) { box.textContent = 'لا توجد بيانات في هذه الفترة.'; return; }
+    const mx = r.apps[0].bytes;
+    box.innerHTML = r.apps.map(a => `<div class="row" style="align-items:center"><span style="min-width:110px">${esc(a.name)}</span><div class="meter" style="flex:1"><i style="width:${a.bytes / mx * 100}%"></i></div><span class="num">${mb(a.bytes)}</span></div>`).join('') + `<div class="row"><b>الإجمالي</b><b class="num">${mb(r.total)}</b></div>`;
+  }
+  $('uP').onchange = usage;
+
+  /* ---- guard ---- */
+  async function guard() {
+    const box = $('gL'); box.textContent = 'جاري الفحص...';
+    const w = await call('wifiInfo'); const sc = await call('scan');
+    const rows = [];
+    const me = (sc.list || []).find(n => n.bssid && w.bssid && n.bssid.toLowerCase() === w.bssid.toLowerCase());
+    if (me) {
+      rows.push(['التشفير ' + me.sec, me.sec === 'WPA3' || me.sec === 'WPA2' ? 'good' : 'bad', me.sec === 'WPA3' ? 'ممتاز' : me.sec === 'WPA2' ? 'جيد' : 'ضعيف: غيّره إلى WPA2 أو WPA3']);
+      rows.push(['WPS', me.wps ? 'bad' : 'good', me.wps ? 'مفعل: عطّله من الراوتر' : 'غير ظاهر']);
+    } else rows.push(['تشفير الشبكة', 'warn', 'تعذر تحديده (فعّل إذن الموقع)']);
+    if (w.gw) {
+      const ps = [21, 23, 80, 443]; const open = [];
+      await call('ports', { host: w.gw, ports: ps }, e => { if (e.k === 'port' && e.v.open) open.push(e.v.port); });
+      rows.push(['Telnet / FTP على الراوتر', open.includes(23) || open.includes(21) ? 'bad' : 'good', open.includes(23) || open.includes(21) ? 'مفتوح: أغلقه' : 'مغلق']);
+      rows.push(['لوحة الراوتر عبر HTTPS', open.includes(443) ? 'good' : 'warn', open.includes(443) ? 'متاحة' : 'HTTP فقط']);
+    }
+    const unk = DEVS.filter(d => !known.has(dkey(d))).length;
+    if (DEVS.length) rows.push(['أجهزة غير معلَّمة', unk ? 'warn' : 'good', unk + '']);
+    box.innerHTML = rows.map(c => `<div class="row"><span>${esc(c[0])}</span><span class="pill ${c[1]}">${esc(c[2])}</span></div>`).join('');
+    gdev();
+  }
+  function gdev() {
+    const box = $('gD'); if (!DEVS.length) return;
+    box.innerHTML = DEVS.map((d, i) => `<div class="row" style="align-items:center"><span>${esc(d.host || d.ip)}<br><span class="lbl num">${esc(d.mac || d.ip)}</span></span><button class="ghost" data-i="${i}">${known.has(dkey(d)) ? 'معروف' : 'غير معروف'}</button></div>`).join('');
+    box.querySelectorAll('button').forEach(b => b.onclick = () => { const d = DEVS[+b.dataset.i], k = dkey(d); known.has(k) ? known.delete(k) : known.add(k); ls.set('known', [...known]); gdev(); });
+  }
+  $('gGo').onclick = guard;
+  $('rtGo').onclick = () => { if (W.gw && W.gw !== '0.0.0.0') call('openUrl', { url: 'http://' + W.gw }); };
+
+  /* ---- diagnostics ---- */
+  $('dGo').onclick = async () => {
+    const o = $('dO'); o.textContent = 'جاري القياس...'; $('dGo').disabled = true;
+    const w = await call('wifiInfo');
+    if (!w.enabled) { o.textContent = 'الواي فاي غير متصل.'; $('dGo').disabled = false; return; }
+    const g = await call('ping', { host: w.gw, count: 4, quiet: true });
+    const n = await call('ping', { host: '8.8.8.8', count: 4, quiet: true });
+    const d = await call('dns', { host: 'example.com' });
+    const sc = await call('scan'); const sameCh = (sc.list || []).filter(x => x.channel === w.channel && x.bssid.toLowerCase() !== (w.bssid || '').toLowerCase()).length;
+    const f = [];
+    if (w.rssi < -70) f.push(['bad', `الإشارة ضعيفة (${w.rssi} dBm)`, 'اقترب من الراوتر أو أزل العوائق، أو استخدم مقوّيا.']);
+    if (sameCh >= 3) f.push(['warn', `القناة مزدحمة (${sameCh} شبكات على نفس القناة)`, 'غيّر قناة الراوتر من تبويب المحلل.']);
+    if (w.link > 0 && w.link < 100) f.push(['warn', `سرعة الربط منخفضة (${w.link} Mbps)`, 'انتقل إلى 5 GHz إن كان جهازك يدعمه.']);
+    if (g.avg < 0 || g.loss >= 25) f.push(['bad', 'الراوتر لا يستجيب جيدا', 'أعد تشغيل الراوتر وتأكد من قرب الجهاز منه.']);
+    else if (n.loss >= 25) f.push(['bad', `فقد حزم نحو الإنترنت ${n.loss}%`, 'المشكلة غالبا بين الراوتر ومزود الخدمة. تواصل معه.']);
+    if (n.avg > 80) f.push(['warn', `زمن الاستجابة للإنترنت مرتفع (${Math.round(n.avg)} ms)`, 'أوقف التنزيلات الكبيرة أثناء الألعاب والمكالمات.']);
+    if (d.ms > 300) f.push(['warn', `حل أسماء النطاقات بطيء (${Math.round(d.ms)} ms)`, 'جرّب DNS عام مثل 1.1.1.1 أو 8.8.8.8.']);
+    if (!f.length) f.push(['good', 'الشبكة بحالة جيدة', 'لا توجد مشكلة ظاهرة في هذه المقاييس.']);
+    const m = (l, v) => `<div class="card"><div class="lbl">${l}</div><span class="num big">${v}</span></div>`;
+    o.innerHTML = `<div class="grid" style="margin-bottom:12px">${m('الإشارة dBm', w.rssi)}${m('Ping الراوتر ms', g.avg >= 0 ? Math.round(g.avg) : '—')}${m('Ping الإنترنت ms', n.avg >= 0 ? Math.round(n.avg) : '—')}${m('فقد الحزم %', n.loss)}</div>` + f.map(x => `<div class="row"><span class="pill ${x[0]}" style="align-self:flex-start">${esc(x[1])}</span><span style="flex:1">${esc(x[2])}</span></div>`).join('');
+    $('dGo').disabled = false;
+  };
+
+  route();
+}
+if (!B) document.body.textContent = 'يعمل هذا الملف داخل تطبيق awfi فقط.'; else main();
+
+</script></body></html>
