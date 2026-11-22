@@ -1,5 +1,4 @@
-name: Build awfi.apk
-
+name: Build awfi.apk (https://github.com/awniawni44/awfi/actions/workflows/main.yml/badge.svg) (https://github.com/awniawni44/awfi/actions/workflows/main.yml)
 on:
   push:
     branches: [main, master]
